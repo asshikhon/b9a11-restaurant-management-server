@@ -31,20 +31,35 @@ async function run() {
         const galleryCollection = client.db('restaurent').collection('gallery');
         const foodCollection = client.db('restaurent').collection('foods');
 
+    
+
         // Connect the client to the server	(optional starting in v4.7)
         //   await client.connect();
 
         app.get('/gallery', async (req, res) => {
             const result = await galleryCollection.find().toArray();
             res.send(result);
-        })
+        });
+
+        app.get('/food', async (req, res) => {
+            const result = await foodCollection.find().toArray();
+            res.send(result);
+        });
 
         app.post('/gallery', async (req, res) => {
             const newGallery = req.body;
-            console.log(newGallery);
             const result = await galleryCollection.insertOne(newGallery);
             res.send(result);
-        })
+        });
+        
+        app.post('/food', async (req, res) => {
+            const newFood = req.body;
+            console.log(newFood);
+            const result = await foodCollection.insertOne(newFood);
+            res.send(result);
+        });
+
+
 
 
         // Send a ping to confirm a successful connection
