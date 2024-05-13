@@ -67,18 +67,21 @@ async function run() {
             res.send(result);
         });
 
-        // app.get('/purchase/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await purchaseCollection.findOne(query);
-        //     res.send(result);
-        // })
+        app.get('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await purchaseCollection.findOne(query);
+            res.send(result);
+        })
 
-        // app.get('/myOrder/:email', async (req, res) => {
-        //     console.log(req.params.email);
-        //     const result = await purchaseCollection.find({ email: req.params.email }).toArray();
-        //     res.send(result);
-        // })
+        app.get('/myOrder/:email', async (req, res) => {
+            const userEmail = req.params.email;
+            console.log("Requested email:", userEmail);
+            const result = await purchaseCollection.find({ email: userEmail }).toArray();
+            console.log("Retrieved data:", result);
+            res.send(result);
+        });
+        
 
 // for gallery
         app.post('/gallery', async (req, res) => {
