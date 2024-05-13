@@ -106,8 +106,33 @@ async function run() {
             }
             // if (filter) query.category = filter
             const count = await foodCollection.countDocuments(query)
-
             res.send({ count })
+        })
+
+
+    //    app.put('/food/:id', async (req, res) => {
+    //         const id = req.params.id;
+    //         const user = req.body;
+    //         console.log(user);
+    //         const filter = { _id: new ObjectId(id) }
+    //         const options = { upsert: true }
+    //         const updatedUser = {
+    //             $set: {
+    //                 ...user
+    //             }
+    //         }
+    //         const result = await foodCollection.updateOne(filter, updatedUser, options);
+    //         res.send(result);
+    //     }) 
+
+
+        app.delete('/food/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('object deleted', id);
+            const query = { _id: new ObjectId(id) };
+            const result = await foodCollection.deleteOne(query);
+            res.send(result);
+
         })
 
 
