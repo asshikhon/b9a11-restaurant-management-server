@@ -30,6 +30,7 @@ async function run() {
 
         const galleryCollection = client.db('restaurent').collection('gallery');
         const foodCollection = client.db('restaurent').collection('foods');
+        const purchaseCollection = client.db('restaurent').collection('food');
 
 
 
@@ -59,41 +60,64 @@ async function run() {
             res.send(result);
         })
 
+        // for purchase method
 
+        app.get('/purchase', async (req, res) => {
+            const result = await purchaseCollection.find().toArray();
+            res.send(result);
+        });
+
+        // app.get('/purchase/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = { _id: new ObjectId(id) };
+        //     const result = await purchaseCollection.findOne(query);
+        //     res.send(result);
+        // })
+
+        // app.get('/myOrder/:email', async (req, res) => {
+        //     console.log(req.params.email);
+        //     const result = await purchaseCollection.find({ email: req.params.email }).toArray();
+        //     res.send(result);
+        // })
+
+// for gallery
         app.post('/gallery', async (req, res) => {
             const newGallery = req.body;
             const result = await galleryCollection.insertOne(newGallery);
             res.send(result);
         });
 
+        // for All foods
         app.post('/food', async (req, res) => {
             const newFood = req.body;
             console.log(newFood);
             const result = await foodCollection.insertOne(newFood);
             res.send(result);
         });
+        // for purchased food
+        app.post('/purchase', async (req, res) => {
+            const purchaseFood = req.body;
+            console.log(purchaseFood);
+            const result = await purchaseCollection.insertOne(purchaseFood);
+            res.send(result);
+        });
+
 
         app.get('/all-foods', async (req, res) => {
             const size = parseInt(req.query.size);
             const page = parseInt(req.query.page) - 1;
-
             let search = req.query.search;
-
-
             if (typeof search !== 'string') {
                 search = '';
             }
-
             const query = {
                 name: { $regex: search, $options: 'i' },
             };
-
             const result = await foodCollection
                 .find(query)
                 .skip(page * size)
                 .limit(size)
                 .toArray();
-
             res.send(result);
         });
 
