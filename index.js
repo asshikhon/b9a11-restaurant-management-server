@@ -53,6 +53,13 @@ async function run() {
         res.send(result);
         })
 
+        app.get('/myItem/:email', async (req, res) => {
+        const result = await foodCollection.find({ email: req.body.email }).toArray();
+        res.send(result);
+        
+        })
+
+
         app.post('/gallery', async (req, res) => {
             const newGallery = req.body;
             const result = await galleryCollection.insertOne(newGallery);
