@@ -30,7 +30,7 @@ async function run() {
 
         const galleryCollection = client.db('restaurent').collection('gallery');
         const foodCollection = client.db('restaurent').collection('foods');
-        const purchaseCollection = client.db('restaurent').collection('food');
+        const purchaseCollection = client.db('restaurant').collection('food');
 
 
 
@@ -74,14 +74,14 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/myOrder/:email', async (req, res) => {
-            const userEmail = req.params.email;
-            console.log("Requested email:", userEmail);
-            const result = await purchaseCollection.find({ email: userEmail }).toArray();
-            console.log("Retrieved data:", result);
-            res.send(result);
-        });
-        
+app.get('/myOrder/:email', async (req, res) => {
+    const userEmail = req.params.email;
+    console.log("Requested email:", userEmail);
+    const result = await purchaseCollection.find({ 'buyer.buyer_email': userEmail }).toArray();
+    console.log("Retrieved data:", result);
+    res.send(result);
+});
+
 
 // for gallery
         app.post('/gallery', async (req, res) => {
