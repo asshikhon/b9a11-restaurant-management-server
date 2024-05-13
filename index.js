@@ -110,20 +110,20 @@ async function run() {
         })
 
 
-    //    app.put('/food/:id', async (req, res) => {
-    //         const id = req.params.id;
-    //         const user = req.body;
-    //         console.log(user);
-    //         const filter = { _id: new ObjectId(id) }
-    //         const options = { upsert: true }
-    //         const updatedUser = {
-    //             $set: {
-    //                 ...user
-    //             }
-    //         }
-    //         const result = await foodCollection.updateOne(filter, updatedUser, options);
-    //         res.send(result);
-    //     }) 
+        app.put('/food/:id', async (req, res) => {
+            const id = req.params.id;
+            const user = req.body;
+            console.log(user);
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const updatedUser = {
+                $set: {
+                    ...user
+                }
+            }
+            const result = await foodCollection.updateOne(filter, updatedUser, options);
+            res.send(result);
+        })
 
 
         app.delete('/food/:id', async (req, res) => {
