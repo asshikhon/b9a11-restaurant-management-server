@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -14,6 +16,27 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
+
+
+// verify jwt middleware
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token
+    if (!token) return res.status(401).send({ message: 'unauthorized access' })
+    if (token) {
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          console.log(err)
+          return res.status(401).send({ message: 'unauthorized access' })
+        }
+        console.log(decoded)
+  
+        req.user = decoded
+        next()
+      })
+    }
+  }
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9ola8x0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -33,6 +56,32 @@ async function run() {
         const purchaseCollection = client.db('restaurant').collection('food');
 
 
+    // jwt generate
+    app.post('/jwt', async (req, res) => {
+        const email = req.body
+        const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: '365d',
+        })
+        res
+          .cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+          })
+          .send({ success: true })
+      })
+
+          // Clear token on logout
+    app.get('/logout', (req, res) => {
+        res
+          .clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 0,
+          })
+          .send({ success: true })
+      })
 
         // Connect the client to the server	(optional starting in v4.7)
         //   await client.connect();
@@ -54,8 +103,10 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/myItem/:email', async (req, res) => {
-            console.log(req.params.email);
+
+        app.get('/myItem/:email', verifyToken, async (req, res) => {
+
+            // console.log(req.params.email);
             const result = await foodCollection.find({ email: req.params.email }).toArray();
             res.send(result);
         })
@@ -74,7 +125,7 @@ async function run() {
             res.send(result);
         })
 
-app.get('/myOrder/:email', async (req, res) => {
+app.get('/myOrder/:email', verifyToken, async (req, res) => {
     const userEmail = req.params.email;
     console.log("Requested email:", userEmail);
     const result = await purchaseCollection.find({ 'buyer.buyer_email': userEmail }).toArray();
@@ -155,11 +206,21 @@ app.get('/myOrder/:email', async (req, res) => {
 
         app.delete('/food/:id', async (req, res) => {
             const id = req.params.id;
-            console.log('object deleted', id);
+            // console.log('object deleted', id);
             const query = { _id: new ObjectId(id) };
             const result = await foodCollection.deleteOne(query);
             res.send(result);
+        })
 
+        // for purchase items
+
+        app.delete('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('object deleted', id);
+            const query = { _id: new ObjectId(id) };
+            const result = await purchaseCollection.deleteOne(query);
+            console.log(result);
+            res.send(result);
         })
 
 
