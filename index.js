@@ -9,7 +9,9 @@ const port = process.env.PORT || 5000;
 const app = express();
 
 const corsOptions = {
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173',
+        'https://b9a11-restaurant-management.web.app',
+        'https://b9a11-restaurant-management.firebaseapp.com'],
     credentials: true,
     optionSuccessStatus: true,
 }
@@ -93,9 +95,21 @@ async function run() {
         });
 
         app.get('/food', async (req, res) => {
-            const result = await foodCollection.find().toArray();
-            res.send(result);
+            let sortQuery = { purchaseCount: 1 };
+            const { sort } = req.query;
+            if (sort === 'purchaseCount_DESC') {
+                sortQuery = { purchaseCount: -1 };
+            }
+
+            try {
+                const result = await foodCollection.find({}).sort(sortQuery).limit(6).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error("Error fetching top foods:", error);
+                res.status(500).json({ error: "Internal Server Error" });
+            }
         });
+
 
         app.get('/food/:id', async (req, res) => {
             const id = req.params.id;
@@ -106,17 +120,11 @@ async function run() {
 
 
         app.get('/myItem/:email', verifyToken, async (req, res) => {
-
             const tokenEmail = req.user.email;
-            console.log(1, tokenEmail);
-            const userEmail = req.params.email
-            console.log(2, userEmail);
-            console.log(tokenEmail == userEmail);
+            const userEmail = req.params.email;
             if (tokenEmail !== userEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-
-            // console.log(req.params.email);
             const result = await foodCollection.find({ email: req.params.email }).toArray();
             res.send(result);
         })
@@ -129,27 +137,24 @@ async function run() {
         });
 
 
-        app.get('/purchase/:id', async (req, res) => {
-            const id = req.params.id;
-            console.log(req.params.id);
-            const query = { _id: new ObjectId(id) };
-            const result = await purchaseCollection.findOne(query);
-            res.send(result);
+        app.get('/purchase/:id', verifyToken, async (req, res) => {
+            if (req.user.email) {
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const result = await purchaseCollection.findOne(query);
+                res.send(result);
+            }
         })
 
         app.get('/myOrder/:email', verifyToken, async (req, res) => {
 
             const tokenEmail = req.user.email;
-            console.log(1, tokenEmail);
             const userEmail = req.params.email
-            console.log(2, userEmail);
             console.log(tokenEmail == userEmail);
             if (tokenEmail !== userEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-            console.log("Requested email:", userEmail);
             const result = await purchaseCollection.find({ 'buyer.buyer_email': userEmail }).toArray();
-            console.log("Retrieved data:", result);
             res.send(result);
         });
 
@@ -165,16 +170,14 @@ async function run() {
         // for All foods
         app.post('/food', async (req, res) => {
             const newFood = req.body;
-            console.log(newFood);
             const result = await foodCollection.insertOne(newFood);
             res.send(result);
         });
-        
+
         // for purchased food
         app.post('/purchase', async (req, res) => {
             const purchaseFood = req.body;
             const foodId = purchaseFood.foodId;
-            console.log(purchaseFood);
             const result = await purchaseCollection.insertOne(purchaseFood);
             const updateDoc = {
                 $inc: { purchaseCount: 1 },
@@ -220,7 +223,6 @@ async function run() {
         app.put('/food/:id', async (req, res) => {
             const id = req.params.id;
             const user = req.body;
-            console.log(user);
             const filter = { _id: new ObjectId(id) }
             const options = { upsert: true }
             const updatedUser = {
@@ -254,7 +256,7 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
